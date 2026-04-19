@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDMS — Driver Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --brand-primary:#2563eb; --sidebar-bg:#0f172a; --sidebar-hover:#1e293b; --sidebar-text:#94a3b8; --sidebar-active:#2563eb; --body-bg:#f1f5f9; --card-bg:#ffffff; --border:#e2e8f0; --text-main:#1e293b; --text-muted:#64748b; }
+    * { box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--body-bg); color:var(--text-main); min-height:100vh; }
+    .sidebar { width:260px; background:var(--sidebar-bg); min-height:100vh; position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; }
+    .sidebar-brand { padding:1.5rem 1.5rem 1rem; border-bottom:1px solid #1e293b; }
+    .sidebar-brand .logo-mark { width:38px; height:38px; background:var(--brand-primary); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff; margin-bottom:.5rem; }
+    .sidebar-brand h1 { font-size:1.1rem; font-weight:800; color:#fff; margin:0; }
+    .sidebar-brand p { font-size:.7rem; color:var(--sidebar-text); margin:0; text-transform:uppercase; letter-spacing:1px; }
+    .sidebar-nav { flex:1; padding:1rem 0; }
+    .nav-section { padding:.25rem 1.25rem .5rem; font-size:.65rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1.5px; margin-top:.5rem; }
+    .sidebar-nav .nav-link { display:flex; align-items:center; gap:.75rem; padding:.65rem 1.5rem; color:var(--sidebar-text); font-size:.875rem; font-weight:500; cursor:pointer; }
+    .sidebar-nav .nav-link:hover { color:#e2e8f0; background:var(--sidebar-hover); }
+    .sidebar-nav .nav-link.active { color:#fff; background:var(--sidebar-active); }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid #1e293b; }
+    .user-card { display:flex; align-items:center; gap:.75rem; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.875rem; }
+    .user-card .user-name { font-size:.85rem; font-weight:600; color:#e2e8f0; }
+    .user-card .user-role { font-size:.72rem; color:var(--sidebar-text); }
+    .main-wrapper { margin-left:260px; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar { background:var(--card-bg); border-bottom:1px solid var(--border); padding:.875rem 1.75rem; display:flex; align-items:center; position:sticky; top:0; z-index:900; }
+    .topbar-title { font-size:1.15rem; font-weight:700; }
+    .topbar-sub { font-size:.8rem; color:var(--text-muted); }
+    .main-content { padding:1.75rem; flex:1; }
+    .card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; }
+    .stat-card { border-radius:14px; padding:1.35rem 1.5rem; }
+    .stat-card .stat-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:.75rem; background:rgba(255,255,255,.2); }
+    .stat-card .stat-value { font-size:1.75rem; font-weight:800; line-height:1; }
+    .stat-card .stat-label { font-size:.78rem; margin-top:.3rem; opacity:.75; font-weight:500; }
+    .stat-blue  { background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .stat-green { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .stat-amber { background:linear-gradient(135deg,#d97706,#f59e0b); color:#fff; }
+    .stat-teal  { background:linear-gradient(135deg,#0d9488,#2dd4bf); color:#fff; }
+    .page { display:none; }
+    .page.active { display:block; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark"><i class="bi bi-truck"></i></div>
+    <h1>LDMS</h1>
+    <p>Driver Portal</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a class="nav-link active" onclick="showPage('dashboard', this)"><i class="bi bi-grid"></i> Dashboard</a>
+    <div class="nav-section">Deliveries</div>
+    <a class="nav-link" onclick="showPage('deliveries', this)"><i class="bi bi-truck"></i> My Deliveries</a>
+    <a class="nav-link" onclick="showPage('available', this)"><i class="bi bi-shop"></i> Available Orders</a>
+    <a class="nav-link" onclick="showPage('history', this)"><i class="bi bi-clock-history"></i> History</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="user-initial">D</div>
+      <div>
+        <div class="user-name" id="user-name">Driver</div>
+        <div class="user-role">Driver Portal</div>
+      </div>
+      <button class="btn btn-sm btn-link text-secondary p-0 ms-auto" onclick="logout()">
+        <i class="bi bi-box-arrow-right" style="font-size:1.1rem"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="page-title">Driver Dashboard</div>
+      <div class="topbar-sub">Your delivery overview</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-truck"></i></div><div class="stat-value" id="s-active">—</div><div class="stat-label">Active Deliveries</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" id="s-today">—</div><div class="stat-label">Delivered Today</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-amber"><div class="stat-icon"><i class="bi bi-calendar-week"></i></div><div class="stat-value" id="s-week">—</div><div class="stat-label">This Week</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-teal"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div class="stat-value" id="s-rate">—%</div><div class="stat-label">Success Rate</div></div></div>
+      </div>
+      <div class="card p-4">
+        <h5 class="fw-bold mb-3">Active Deliveries</h5>
+        <p class="text-muted">Deliveries table will be connected to API in Step 12.</p>
+      </div>
+    </div>
+
+    <!-- MY DELIVERIES PAGE -->
+    <div class="page" id="page-deliveries">
+      <div class="card p-4">
+        <h5 class="fw-bold mb-3">My Deliveries</h5>
+        <p class="text-muted">Deliveries table will be connected to API in Step 12.</p>
+      </div>
+    </div>
+
+    <!-- AVAILABLE ORDERS PAGE -->
+    <div class="page" id="page-available">
+      <div class="card p-4">
+        <h5 class="fw-bold mb-3">Available Orders</h5>
+        <p class="text-muted">Available orders will be connected to API in Step 12.</p>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="page-history">
+      <div class="card p-4">
+        <h5 class="fw-bold mb-3">Delivery History</h5>
+        <p class="text-muted">History will be connected to API in Step 12.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  // TODO: API integration will be added in Step 12
+  function showPage(name, linkEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    if (linkEl) linkEl.classList.add('active');
+    document.getElementById('page-title').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  function logout() {
+    // TODO: clear token and redirect in Step 12
+    window.location.href = '../index.html';
+  }
+</script>
+</body>
+</html>
