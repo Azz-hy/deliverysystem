@@ -145,3 +145,479 @@
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDMS — Admin Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --brand-primary:#2563eb; --sidebar-bg:#0f172a; --sidebar-hover:#1e293b; --sidebar-text:#94a3b8; --sidebar-active:#2563eb; --body-bg:#f1f5f9; --card-bg:#ffffff; --border:#e2e8f0; --text-main:#1e293b; --text-muted:#64748b; }
+    * { box-sizing: border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--body-bg); color:var(--text-main); min-height:100vh; }
+    .sidebar { width:260px; background:var(--sidebar-bg); min-height:100vh; position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; transition:transform .3s; }
+    .sidebar-brand { padding:1.5rem 1.5rem 1rem; border-bottom:1px solid #1e293b; }
+    .sidebar-brand .logo-mark { width:38px; height:38px; background:var(--brand-primary); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff; margin-bottom:.5rem; }
+    .sidebar-brand h1 { font-size:1.1rem; font-weight:800; color:#fff; margin:0; letter-spacing:-.3px; }
+    .sidebar-brand p { font-size:.7rem; color:var(--sidebar-text); margin:0; text-transform:uppercase; letter-spacing:1px; }
+    .sidebar-nav { flex:1; padding:1rem 0; overflow-y:auto; }
+    .nav-section { padding:.25rem 1.25rem .5rem; font-size:.65rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1.5px; margin-top:.5rem; }
+    .sidebar-nav .nav-link { display:flex; align-items:center; gap:.75rem; padding:.65rem 1.5rem; color:var(--sidebar-text); font-size:.875rem; font-weight:500; transition:all .15s; cursor:pointer; text-decoration:none; }
+    .sidebar-nav .nav-link:hover { color:#e2e8f0; background:var(--sidebar-hover); }
+    .sidebar-nav .nav-link.active { color:#fff; background:var(--sidebar-active); }
+    .sidebar-nav .nav-link .bi { font-size:1.05rem; flex-shrink:0; }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid #1e293b; }
+    .user-card { display:flex; align-items:center; gap:.75rem; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.875rem; flex-shrink:0; }
+    .user-card .user-name { font-size:.85rem; font-weight:600; color:#e2e8f0; }
+    .user-card .user-role { font-size:.72rem; color:var(--sidebar-text); }
+    .main-wrapper { margin-left:260px; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar { background:var(--card-bg); border-bottom:1px solid var(--border); padding:.875rem 1.75rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:900; }
+    .topbar-title { font-size:1.15rem; font-weight:700; }
+    .topbar-sub { font-size:.8rem; color:var(--text-muted); }
+    .main-content { padding:1.75rem; flex:1; }
+    .card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    .card-header-custom { padding:1.25rem 1.5rem .75rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-header-custom h5 { font-size:.95rem; font-weight:700; margin:0; }
+    .stat-card { border-radius:14px; padding:1.35rem 1.5rem; }
+    .stat-card .stat-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:.75rem; background:rgba(255,255,255,.2); }
+    .stat-card .stat-value { font-size:1.75rem; font-weight:800; line-height:1; }
+    .stat-card .stat-label { font-size:.78rem; margin-top:.3rem; opacity:.75; font-weight:500; }
+    .stat-purp   { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; }
+    .stat-blue   { background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .stat-green  { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .stat-amber  { background:linear-gradient(135deg,#d97706,#f59e0b); color:#fff; }
+    .badge-status { font-size:.72rem; font-weight:600; padding:.3rem .7rem; border-radius:20px; }
+    .badge-pending    { background:#fef3c7; color:#92400e; }
+    .badge-assigned   { background:#dbeafe; color:#1e40af; }
+    .badge-picked_up  { background:#ede9fe; color:#5b21b6; }
+    .badge-on_the_way { background:#e0f2fe; color:#075985; }
+    .badge-delivered  { background:#dcfce7; color:#166534; }
+    .badge-failed     { background:#fee2e2; color:#991b1b; }
+    .table-custom { font-size:.875rem; }
+    .table-custom thead th { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-muted); background:#f8fafc; border-bottom:2px solid var(--border); padding:.875rem 1rem; }
+    .table-custom tbody td { padding:.875rem 1rem; vertical-align:middle; }
+    .table-custom tbody tr:hover { background:#f8fafc; }
+    .form-label { font-size:.85rem; font-weight:600; color:var(--text-main); margin-bottom:.35rem; }
+    .form-control, .form-select { border:1.5px solid var(--border); border-radius:8px; font-size:.875rem; padding:.55rem .875rem; transition:border-color .15s; font-family:inherit; }
+    .form-control:focus, .form-select:focus { border-color:var(--brand-primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .page { display:none; }
+    .page.active { display:block; }
+    .btn-hamburger { display:none; background:none; border:none; font-size:1.3rem; color:var(--text-main); cursor:pointer; padding:0; }
+    @media (max-width:768px) { .btn-hamburger { display:block; } .sidebar { transform:translateX(-260px); } .sidebar.open { transform:translateX(0); } .main-wrapper { margin-left:0; } }
+  </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark"><i class="bi bi-shield-lock"></i></div>
+    <h1>LDMS Admin</h1>
+    <p>Management System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a class="nav-link active" onclick="showPage('dashboard',this,'Admin Dashboard','')"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <div class="nav-section">Management</div>
+    <a class="nav-link" onclick="showPage('users',this,'User Management','')"><i class="bi bi-people"></i> Users</a>
+    <a class="nav-link" onclick="showPage('orders',this,'All Orders','')"><i class="bi bi-truck"></i> Orders</a>
+    <a class="nav-link" onclick="showPage('reports',this,'System Reports','')"><i class="bi bi-bar-chart"></i> Reports</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">A</div>
+      <div><div class="user-name" id="user-name">Admin</div><div class="user-role">System Admin</div></div>
+      <button class="btn btn-sm btn-link text-secondary p-0 ms-auto" onclick="logout()"><i class="bi bi-box-arrow-right" style="font-size:1.1rem"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="main-wrapper">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn-hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list"></i></button>
+      <div>
+        <div class="topbar-title" id="page-title">Admin Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Central Management</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" onclick="showPage('users',null,'User Management','')"><i class="bi bi-plus-lg me-1"></i>Add User</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="stat-card stat-purp"><div class="stat-icon"><i class="bi bi-shop"></i></div><div class="stat-value" id="d-sellers">—</div><div class="stat-label">Total Sellers</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-person-badge"></i></div><div class="stat-value" id="d-drivers">—</div><div class="stat-label">Total Drivers</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-amber"><div class="stat-icon"><i class="bi bi-box-seam"></i></div><div class="stat-value" id="d-orders">—</div><div class="stat-label">Total Orders</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-cash-stack"></i></div><div class="stat-value" id="d-revenue">—</div><div class="stat-label">Total Revenue</div></div></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header-custom">
+          <h5><i class="bi bi-clock-history me-2 text-info"></i>Recent System Activity</h5>
+          <button class="btn btn-sm btn-outline-primary" onclick="showPage('orders',null,'All Orders','')">View Orders</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Seller</th><th>Customer</th><th>Product Price</th><th>Fee</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody id="recent-tbody"><tr><td colspan="8" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="btn-group btn-group-sm">
+          <input type="radio" class="btn-check" name="user-role-filter" id="role-seller" checked onchange="loadUsers()">
+          <label class="btn btn-outline-primary" for="role-seller">Sellers</label>
+          <input type="radio" class="btn-check" name="user-role-filter" id="role-driver" onchange="loadUsers()">
+          <label class="btn btn-outline-primary" for="role-driver">Drivers</label>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="bi bi-plus-circle me-1"></i>New User</button>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr id="users-thead"><th>Name</th><th>Email / Phone</th><th>Business / Vehicle</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="d-flex gap-2 mb-3">
+        <select id="status-filter" class="form-select" style="max-width:180px" onchange="loadOrders()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option><option value="assigned">Assigned</option>
+          <option value="picked_up">Picked Up</option><option value="on_the_way">On The Way</option>
+          <option value="delivered">Delivered</option><option value="failed">Failed</option>
+        </select>
+        <div class="input-group input-group-sm" style="max-width:300px">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" id="order-search" class="form-control" placeholder="Order # or Customer..." onkeyup="if(event.key==='Enter')loadOrders()">
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Seller</th><th>Customer</th><th>Product Price</th><th>Fee</th><th>Driver</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody id="orders-tbody"><tr><td colspan="9" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-end p-3" id="orders-pagination"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header-custom"><h5><i class="bi bi-calendar-check me-2"></i>Daily Summary</h5></div>
+            <div class="p-4" id="daily-report-content">Loading...</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header-custom"><h5><i class="bi bi-graph-up me-2"></i>Monthly Performance</h5></div>
+            <div class="p-4" id="monthly-report-content">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER DETAIL / ASSIGN -->
+    <div class="page" id="page-order-detail">
+      <div class="mb-3"><button class="btn btn-sm btn-outline-secondary" onclick="showPage('orders',null,'All Orders','')"><i class="bi bi-arrow-left me-1"></i>Back</button></div>
+      <div id="order-detail-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow" style="border-radius:16px">
+      <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-800">Create New System User</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-4">
+        <div id="modal-alert"></div>
+        <form id="add-user-form">
+          <div class="mb-3"><label class="form-label">Full Name</label><input id="u-name" class="form-control" placeholder="e.g. John Doe" required></div>
+          <div class="mb-3"><label class="form-label">Email Address</label><input type="email" id="u-email" class="form-control" placeholder="user@example.com" required></div>
+          <div class="mb-3"><label class="form-label">Phone Number</label><input id="u-phone" class="form-control" placeholder="0781 234 5678" oninput="formatIraqiPhone(this)" maxlength="14"></div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select id="u-role" class="form-select" onchange="toggleRoleFields()" required>
+              <option value="seller">Seller</option>
+              <option value="driver">Driver</option>
+            </select>
+          </div>
+          <div id="seller-fields">
+            <div class="mb-3"><label class="form-label">Business Name</label><input id="u-business_name" class="form-control"></div>
+            <div class="mb-3"><label class="form-label">Business Address</label><input id="u-business_address" class="form-control"></div>
+          </div>
+          <div id="driver-fields" style="display:none">
+            <div class="mb-3"><label class="form-label">Vehicle Type</label><select id="u-vehicle_type" class="form-select"><option>Motorcycle</option><option>Car</option><option>Van</option></select></div>
+            <div class="mb-3"><label class="form-label">Plate Number</label><input id="u-vehicle_number" class="form-control"></div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><label class="form-label">Password</label><input type="password" id="u-password" class="form-control" required></div>
+            <div class="col-6"><label class="form-label">Confirm</label><input type="password" id="u-password_confirmation" class="form-control" required></div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script>
+const currentUser = requireAuth('admin');
+if (currentUser) {
+  document.getElementById('user-name').textContent = currentUser.name;
+}
+
+function logout() { Auth.clear(); window.location.href = '../index.html'; }
+
+function showPage(name, linkEl, title, sub) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (linkEl) linkEl.classList.add('active');
+  if (title) document.getElementById('page-title').textContent = title;
+  if (sub !== undefined) document.getElementById('page-sub').textContent = sub || 'Central Management';
+  document.getElementById('sidebar').classList.remove('open');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'users')     loadUsers();
+  if (name === 'orders')    loadOrders();
+  if (name === 'reports')   loadReports();
+}
+
+async function loadDashboard() {
+  try {
+    const d = await GET('/admin/dashboard');
+    document.getElementById('d-sellers').textContent = d.stats.total_sellers;
+    document.getElementById('d-drivers').textContent = d.stats.total_drivers;
+    document.getElementById('d-orders').textContent  = d.stats.total_orders;
+    document.getElementById('d-revenue').textContent = fmtMoney(d.stats.total_revenue);
+    
+    document.getElementById('recent-tbody').innerHTML = d.recent_orders.length
+      ? d.recent_orders.map(o => `<tr>
+          <td><code class="small">${o.order_number}</code></td>
+          <td>${o.seller_name}</td>
+          <td>${o.customer_name}</td>
+          <td class="fw-bold">${fmtMoney(o.product_price)}</td>
+          <td class="fw-bold">${fmtMoney(o.delivery_fee)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td class="text-muted small">${timeAgo(o.created_at)}</td>
+          <td><button class="btn btn-sm btn-outline-secondary" onclick="viewOrder(${o.id})"><i class="bi bi-eye"></i></button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="8" class="text-center py-4">No activity found</td></tr>';
+  } catch(e) {}
+}
+
+async function loadUsers() {
+  const role = document.getElementById('role-seller').checked ? 'seller' : 'driver';
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
+  try {
+    const d = await GET(`/admin/users?role=${role}`);
+    tbody.innerHTML = d.data.length ? d.data.map(u => `<tr>
+      <td><div class="fw-bold">${u.name}</div><div class="text-muted small">#${u.id}</div></td>
+      <td><div>${u.email}</div><div class="text-muted small">${u.phone||'—'}</div></td>
+      <td>${role==='seller' ? `<div>${u.business_name||'—'}</div>` : `<div>${u.vehicle_type} (${u.vehicle_number})</div>`}</td>
+      <td><span class="badge ${u.is_active?'bg-success':'bg-danger'}">${u.is_active?'Active':'Deactivated'}</span></td>
+      <td class="text-muted small">${fmtDate(u.created_at)}</td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm ${u.is_active?'btn-outline-warning':'btn-outline-success'}" onclick="toggleUser(${u.id})" title="Toggle Status">
+            <i class="bi bi-${u.is_active?'person-x':'person-check'}"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.id}, '${u.name.replace(/'/g, "\\'")}')" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('')     : '<tr><td colspan="6" class="text-center py-4">No users found</td></tr>';
+  } catch(e) {}
+}
+
+async function toggleUser(id) {
+  if (!confirm('Are you sure you want to change this user\'s status?')) return;
+  try { await POST(`/admin/users/${id}/toggle`); toast('Status updated'); loadUsers(); } catch(e) {}
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) return;
+  try {
+    await DELETE(`/admin/users/${id}`);
+    toast('User deleted successfully');
+    loadUsers();
+  } catch(e) { toast(e.message || 'Failed to delete user', 'error'); }
+}
+
+async function loadOrders(page = 1) {
+  const status = document.getElementById('status-filter').value;
+  const search = document.getElementById('order-search').value;
+  const tbody = document.getElementById('orders-tbody');
+  tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">Loading...</td></tr>';
+  try {
+    const params = new URLSearchParams({ page, ...(status&&{status}), ...(search&&{search}) });
+    const d = await GET(`/admin/orders?${params}`);
+    tbody.innerHTML = d.data.length ? d.data.map(o => `<tr>
+      <td><code class="small">${o.order_number}</code></td>
+      <td class="small">${o.seller_name}</td>
+      <td><div>${o.customer_name}</div><div class="text-muted small">${o.customer_phone}</div></td>
+      <td class="fw-bold">${fmtMoney(o.product_price)}</td>
+      <td class="fw-bold">${fmtMoney(o.delivery_fee)}</td>
+      <td class="small">${o.driver_name||'—'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td class="text-muted small">${fmtDate(o.created_at)}</td>
+      <td><button class="btn btn-sm btn-outline-secondary" onclick="viewOrder(${o.id})"><i class="bi bi-eye"></i></button></td>
+    </tr>`).join('') : '<tr><td colspan="9" class="text-center py-4">No orders matching criteria</td></tr>';
+    
+    const pg = document.getElementById('orders-pagination');
+    pg.innerHTML = d.last_page > 1 ? Array.from({length:d.last_page},(_,i)=>
+      `<button class="btn btn-sm ${i+1===page?'btn-primary':'btn-outline-secondary'} me-1" onclick="loadOrders(${i+1})">${i+1}</button>`).join('') : '';
+  } catch(e) {}
+}
+
+async function viewOrder(id) {
+  showPage('order-detail', null, 'Order Assignment');
+  const el = document.getElementById('order-detail-content');
+  el.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
+  try {
+    const o = await GET(`/admin/orders/${id}`);
+    const drivers = await GET('/admin/drivers-list');
+    el.innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-7">
+          <div class="card p-4">
+            <h5 class="fw-bold mb-3">Order Info: ${o.order_number}</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-6"><label class="text-muted small">Seller</label><div>${o.seller_name}</div></div>
+              <div class="col-6"><label class="text-muted small">Status</label><div>${statusBadge(o.status)}</div></div>
+              <div class="col-6"><label class="text-muted small">Customer</label><div>${o.customer_name} (${o.customer_phone})</div></div>
+              <div class="col-12"><label class="text-muted small">Address</label><div>${o.delivery_address}</div></div>
+              <div class="col-12"><label class="text-muted small">Product</label><div>${o.product_description}</div></div>
+              <div class="col-md-6"><label class="text-muted small">Product Price</label><div class="fw-bold">${fmtMoney(o.product_price)}</div></div>
+              <div class="col-md-6"><label class="text-muted small">Delivery Fee</label><div class="fw-bold text-success">${fmtMoney(o.delivery_fee)}</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card p-4">
+            <h5 class="fw-bold mb-3">Action</h5>
+            ${o.status === 'pending' || (o.status === 'assigned' && !o.delivered_at) ? `
+              <label class="form-label">Assign / Re-assign Driver</label>
+              <select id="assign-driver-id" class="form-select mb-3">
+                <option value="">— Select Driver —</option>
+                ${drivers.map(d => `<option value="${d.id}" ${o.driver_id===d.id?'selected':''}>${d.name} (${d.active_orders} active jobs)</option>`).join('')}
+              </select>
+              <button class="btn btn-primary w-100" onclick="assignDriver(${o.id})">Save Assignment</button>
+            ` : `<div class="alert alert-info py-2 small">This order is in status <strong>${o.status}</strong> and cannot be assigned.</div>`}
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML = '<p class="text-danger">Failed to load details</p>'; }
+}
+
+async function assignDriver(id) {
+  const driverId = document.getElementById('assign-driver-id').value;
+  if (!driverId) return alert('Select a driver');
+  try {
+    await POST(`/admin/orders/${id}/assign`, { driver_id: driverId });
+    toast('Driver assigned successfully');
+    viewOrder(id);
+  } catch(e) { toast(e.message||'Failed','error'); }
+}
+
+async function loadReports() {
+  const dailyEl = document.getElementById('daily-report-content');
+  const monthlyEl = document.getElementById('monthly-report-content');
+  
+  try {
+    const daily = await GET('/admin/reports?type=daily');
+    dailyEl.innerHTML = `
+      <div class="row g-4 text-center">
+        <div class="col-6"><div class="stat-value text-primary" style="font-size:2rem">${daily.total_created}</div><div class="stat-label">Orders Created</div></div>
+        <div class="col-6"><div class="stat-value text-success" style="font-size:2rem">${daily.delivered}</div><div class="stat-label">Delivered</div></div>
+        <div class="col-6"><div class="stat-value text-danger" style="font-size:2rem">${daily.failed}</div><div class="stat-label">Failed</div></div>
+        <div class="col-6"><div class="stat-value text-dark" style="font-size:2rem">${fmtMoney(daily.revenue)}</div><div class="stat-label">Revenue</div></div>
+      </div>`;
+      
+    const monthly = await GET('/admin/reports?type=monthly');
+    monthlyEl.innerHTML = `
+      <table class="table table-sm small">
+        <thead><tr><th>Month</th><th>Orders</th><th>Comp.</th><th>Revenue</th></tr></thead>
+        <tbody>${monthly.map(m => `<tr><td>${m.month}</td><td>${m.orders}</td><td>${m.completed}</td><td class="fw-bold">${fmtMoney(m.revenue)}</td></tr>`).join('')}</tbody>
+      </table>`;
+  } catch(e) {}
+}
+
+const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+function openAddUserModal() { document.getElementById('add-user-form').reset(); toggleRoleFields(); modal.show(); }
+function toggleRoleFields() {
+  const role = document.getElementById('u-role').value;
+  document.getElementById('seller-fields').style.display = role==='seller'?'block':'none';
+  document.getElementById('driver-fields').style.display = role==='driver'?'block':'none';
+}
+
+document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alert = document.getElementById('modal-alert');
+  alert.innerHTML = '';
+  
+  const phone = document.getElementById('u-phone').value;
+  if (phone && !validateIraqiPhone(phone)) {
+    alert.innerHTML = '<div class="alert alert-danger py-2 small">Please enter a valid Iraqi phone number (e.g., 0750 111 2233)</div>';
+    return;
+  }
+  
+  const data = {
+    name: document.getElementById('u-name').value,
+    email: document.getElementById('u-email').value,
+    phone: phone,
+    role: document.getElementById('u-role').value,
+    password: document.getElementById('u-password').value,
+    password_confirmation: document.getElementById('u-password_confirmation').value,
+  };
+  if (data.role === 'seller') {
+    data.business_name = document.getElementById('u-business_name').value;
+    data.business_address = document.getElementById('u-business_address').value;
+  } else {
+    data.vehicle_type = document.getElementById('u-vehicle_type').value;
+    data.vehicle_number = document.getElementById('u-vehicle_number').value;
+  }
+  
+  try {
+    await POST('/admin/users', data);
+    toast('User created successfully');
+    modal.hide();
+    loadUsers();
+  } catch(err) {
+    const msg = err.errors ? Object.values(err.errors).flat().join(' ') : (err.message||'Failed');
+    alert.innerHTML = `<div class="alert alert-danger py-2 small">${msg}</div>`;
+  }
+});
+
+loadDashboard();
+</script>
+</body>
+</html>
