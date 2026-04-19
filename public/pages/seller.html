@@ -159,3 +159,476 @@
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDMS — Seller Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --brand-primary:#2563eb; --sidebar-bg:#0f172a; --sidebar-hover:#1e293b; --sidebar-text:#94a3b8; --sidebar-active:#2563eb; --body-bg:#f1f5f9; --card-bg:#ffffff; --border:#e2e8f0; --text-main:#1e293b; --text-muted:#64748b; }
+    * { box-sizing: border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--body-bg); color:var(--text-main); min-height:100vh; }
+    .sidebar { width:260px; background:var(--sidebar-bg); min-height:100vh; position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; transition:transform .3s; }
+    .sidebar-brand { padding:1.5rem 1.5rem 1rem; border-bottom:1px solid #1e293b; }
+    .sidebar-brand .logo-mark { width:38px; height:38px; background:var(--brand-primary); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff; margin-bottom:.5rem; }
+    .sidebar-brand h1 { font-size:1.1rem; font-weight:800; color:#fff; margin:0; letter-spacing:-.3px; }
+    .sidebar-brand p { font-size:.7rem; color:var(--sidebar-text); margin:0; text-transform:uppercase; letter-spacing:1px; }
+    .sidebar-nav { flex:1; padding:1rem 0; overflow-y:auto; }
+    .nav-section { padding:.25rem 1.25rem .5rem; font-size:.65rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1.5px; margin-top:.5rem; }
+    .sidebar-nav .nav-link { display:flex; align-items:center; gap:.75rem; padding:.65rem 1.5rem; color:var(--sidebar-text); font-size:.875rem; font-weight:500; transition:all .15s; cursor:pointer; }
+    .sidebar-nav .nav-link:hover { color:#e2e8f0; background:var(--sidebar-hover); }
+    .sidebar-nav .nav-link.active { color:#fff; background:var(--sidebar-active); }
+    .sidebar-nav .nav-link .bi { font-size:1.05rem; flex-shrink:0; }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid #1e293b; }
+    .user-card { display:flex; align-items:center; gap:.75rem; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.875rem; flex-shrink:0; }
+    .user-card .user-name { font-size:.85rem; font-weight:600; color:#e2e8f0; }
+    .user-card .user-role { font-size:.72rem; color:var(--sidebar-text); }
+    .main-wrapper { margin-left:260px; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar { background:var(--card-bg); border-bottom:1px solid var(--border); padding:.875rem 1.75rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:900; }
+    .topbar-title { font-size:1.15rem; font-weight:700; }
+    .topbar-sub { font-size:.8rem; color:var(--text-muted); }
+    .main-content { padding:1.75rem; flex:1; }
+    .card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    .card-header-custom { padding:1.25rem 1.5rem .75rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-header-custom h5 { font-size:.95rem; font-weight:700; margin:0; }
+    .stat-card { border-radius:14px; padding:1.35rem 1.5rem; }
+    .stat-card .stat-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:.75rem; background:rgba(255,255,255,.2); }
+    .stat-card .stat-value { font-size:1.75rem; font-weight:800; line-height:1; }
+    .stat-card .stat-label { font-size:.78rem; margin-top:.3rem; opacity:.75; font-weight:500; }
+    .stat-blue   { background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .stat-green  { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .stat-amber  { background:linear-gradient(135deg,#d97706,#f59e0b); color:#fff; }
+    .stat-red    { background:linear-gradient(135deg,#dc2626,#f87171); color:#fff; }
+    .stat-teal   { background:linear-gradient(135deg,#0d9488,#2dd4bf); color:#fff; }
+    .badge-status { font-size:.72rem; font-weight:600; padding:.3rem .7rem; border-radius:20px; }
+    .badge-pending    { background:#fef3c7; color:#92400e; }
+    .badge-assigned   { background:#dbeafe; color:#1e40af; }
+    .badge-picked_up  { background:#ede9fe; color:#5b21b6; }
+    .badge-on_the_way { background:#e0f2fe; color:#075985; }
+    .badge-delivered  { background:#dcfce7; color:#166534; }
+    .badge-failed     { background:#fee2e2; color:#991b1b; }
+    .table-custom { font-size:.875rem; }
+    .table-custom thead th { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-muted); background:#f8fafc; border-bottom:2px solid var(--border); padding:.875rem 1rem; }
+    .table-custom tbody td { padding:.875rem 1rem; vertical-align:middle; }
+    .table-custom tbody tr:hover { background:#f8fafc; }
+    .form-label { font-size:.85rem; font-weight:600; color:var(--text-main); margin-bottom:.35rem; }
+    .form-control, .form-select { border:1.5px solid var(--border); border-radius:8px; font-size:.875rem; padding:.55rem .875rem; transition:border-color .15s; font-family:inherit; }
+    .form-control:focus, .form-select:focus { border-color:var(--brand-primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .fw-600 { font-weight:600; }
+    .fw-700 { font-weight:700; }
+    .page { display:none; }
+    .page.active { display:block; }
+    .btn-hamburger { display:none; background:none; border:none; font-size:1.3rem; color:var(--text-main); cursor:pointer; padding:0; }
+    @media (max-width:768px) { .btn-hamburger { display:block; } .sidebar { transform:translateX(-260px); } .sidebar.open { transform:translateX(0); } .main-wrapper { margin-left:0; } }
+  </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark"><i class="bi bi-truck"></i></div>
+    <h1>LDMS</h1>
+    <p>Seller Portal</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a class="nav-link active" onclick="showPage('dashboard',this,'My Dashboard')"><i class="bi bi-grid"></i> Dashboard</a>
+    <div class="nav-section">Orders</div>
+    <a class="nav-link" onclick="showPage('orders',this,'My Orders')"><i class="bi bi-list-ul"></i> My Orders</a>
+    <a class="nav-link" onclick="showPage('create',this,'New Order')"><i class="bi bi-plus-circle"></i> New Order</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="user-initial">S</div>
+      <div><div class="user-name" id="user-name">Seller</div><div class="user-role" id="user-biz">Seller Portal</div></div>
+      <button class="btn btn-sm btn-link text-secondary p-0 ms-auto" onclick="logout()"><i class="bi bi-box-arrow-right" style="font-size:1.1rem"></i></button>
+    </div>
+  </div>
+</div>
+
+  <div class="main-wrapper" id="main-wrapper">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn-hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list"></i></button>
+      <div>
+        <div class="topbar-title" id="page-title">My Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Seller Portal</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showPage('create',null,'New Order')">
+      <i class="bi bi-plus-lg me-1"></i>New Order
+    </button>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-box-seam"></i></div><div class="stat-value" id="s-total">—</div><div class="stat-label">Total Orders</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" id="s-delivered">—</div><div class="stat-label">Delivered</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-amber"><div class="stat-icon"><i class="bi bi-clock"></i></div><div class="stat-value" id="s-pending">—</div><div class="stat-label">Pending</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-red"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><div class="stat-value" id="s-failed">—</div><div class="stat-label">Failed</div></div></div>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6"><div class="card p-3 text-center"><div class="text-muted small mb-1">Total Spent</div><div style="font-size:1.5rem;font-weight:800;color:#2563eb" id="s-total-spent">—</div></div></div>
+        <div class="col-md-6"><div class="card p-3 text-center"><div class="text-muted small mb-1">This Month</div><div style="font-size:1.5rem;font-weight:800;color:#d97706" id="s-this-month">—</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header-custom">
+          <h5><i class="bi bi-clock-history me-2 text-info"></i>Recent Orders</h5>
+          <button class="btn btn-sm btn-outline-primary" onclick="showPage('orders',null,'My Orders')">View All</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Product Price</th><th>Fee</th><th>Driver</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody id="recent-tbody"><tr><td colspan="8" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="d-flex gap-2 mb-3">
+        <select id="status-filter" class="form-select" style="max-width:180px" onchange="loadOrders()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option><option value="assigned">Assigned</option>
+          <option value="picked_up">Picked Up</option><option value="on_the_way">On The Way</option>
+          <option value="delivered">Delivered</option><option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Address</th><th>Product Price</th><th>Fee</th><th>Driver</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody id="orders-tbody"><tr><td colspan="9" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-end p-3" id="orders-pagination"></div>
+      </div>
+    </div>
+
+    <!-- CREATE ORDER -->
+    <div class="page" id="page-create">
+      <div class="card" style="max-width:720px">
+        <div class="card-header-custom"><h5><i class="bi bi-plus-circle me-2 text-primary"></i>New Delivery Order</h5></div>
+        <div class="p-4">
+          <div id="create-alert"></div>
+          <div class="alert alert-info py-2 mb-4" style="font-size:.85rem;border:none;background:#dbeafe;color:#1e40af">
+            <i class="bi bi-info-circle me-2"></i>Once submitted, your order will be pending until an admin assigns a driver.
+          </div>
+          <p class="text-muted fw-700 text-uppercase mb-3" style="font-size:.7rem;letter-spacing:.8px">Customer Information</p>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6"><label class="form-label">Customer Name *</label><input id="c-customer_name" class="form-control" placeholder="Recipient full name"></div>
+            <div class="col-md-6"><label class="form-label">Customer Phone *</label><input id="c-customer_phone" class="form-control" placeholder="0781 234 5678" oninput="formatIraqiPhone(this)" maxlength="14"></div>
+            <div class="col-12"><label class="form-label">Delivery Address *</label><textarea id="c-delivery_address" class="form-control" rows="2" placeholder="Full delivery address..."></textarea></div>
+          </div>
+          <hr>
+          <p class="text-muted fw-700 text-uppercase mb-3" style="font-size:.7rem;letter-spacing:.8px">Package &amp; Pricing</p>
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label">Product Description *</label><textarea id="c-product_description" class="form-control" rows="2" placeholder="What is being delivered?"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Product Price (IQD)</label><input type="number" id="c-product_price" class="form-control" placeholder="0" min="0"></div>
+            <div class="col-md-4">
+              <label class="form-label">Zone *</label>
+              <select id="c-delivery_zone" class="form-select" onchange="updateDeliveryFee()" required>
+                <option value="">— Select Zone —</option>
+                <option value="Zone A - Inside Erbil">Zone A - Inside Erbil</option>
+                <option value="Zone B - Outside Erbil">Zone B - Outside Erbil</option>
+              </select>
+            </div>
+            <div class="col-md-4"><label class="form-label">Delivery Fee (IQD)</label><input type="number" id="c-delivery_fee" class="form-control" placeholder="Auto" readonly></div>
+            <div class="col-md-4"><label class="form-label">Special Instructions</label><input id="c-special_instructions" class="form-control" placeholder="e.g. Call first"></div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" id="create-btn" onclick="submitOrder()"><i class="bi bi-send me-1"></i>Submit Order</button>
+            <button class="btn btn-outline-secondary" onclick="showPage('orders',null,'My Orders')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT ORDER -->
+    <div class="page" id="page-edit">
+      <div class="card" style="max-width:720px">
+        <div class="card-header-custom">
+          <h5><i class="bi bi-pencil me-2"></i>Edit Order</h5>
+          <button class="btn btn-sm btn-outline-secondary" onclick="showPage('orders',null,'My Orders')"><i class="bi bi-arrow-left me-1"></i>Back</button>
+        </div>
+        <div class="p-4">
+          <div id="edit-alert"></div>
+          <input type="hidden" id="edit-id">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Customer Name *</label><input id="e-customer_name" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Customer Phone *</label><input id="e-customer_phone" class="form-control" oninput="formatIraqiPhone(this)" maxlength="14"></div>
+            <div class="col-12"><label class="form-label">Delivery Address *</label><textarea id="e-delivery_address" class="form-control" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label">Product Description *</label><textarea id="e-product_description" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-4"><label class="form-label">Product Price (IQD)</label><input type="number" id="e-product_price" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Fee (IQD)</label><input type="number" id="e-delivery_fee" class="form-control" readonly></div>
+            <div class="col-md-4">
+              <label class="form-label">Zone *</label>
+              <select id="e-delivery_zone" class="form-select" onchange="updateDeliveryFeeEdit()"><option value="">— Select Zone —</option><option value="Zone A - Inside Erbil">Zone A - Inside Erbil</option><option value="Zone B - Outside Erbil">Zone B - Outside Erbil</option></select>
+            </div>
+            <div class="col-md-4"><label class="form-label">Special Instructions</label><input id="e-special_instructions" class="form-control"></div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" id="update-btn" onclick="updateOrder()"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+            <button class="btn btn-outline-secondary" onclick="showPage('orders',null,'My Orders')">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER DETAIL -->
+    <div class="page" id="page-order-detail">
+      <div id="order-detail-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script>
+const currentUser = requireAuth('seller');
+if (currentUser) {
+  document.getElementById('user-name').textContent = currentUser.name;
+  document.getElementById('user-initial').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('user-biz').textContent = currentUser.business_name || 'Seller Portal';
+  document.getElementById('page-sub').textContent = currentUser.business_name || 'Seller Portal';
+}
+
+function logout() { Auth.clear(); window.location.href = '../index.html'; }
+
+function showPage(name, linkEl, title) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (linkEl) linkEl.classList.add('active');
+  if (title) document.getElementById('page-title').textContent = title;
+  document.getElementById('sidebar').classList.remove('open');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'orders')    loadOrders();
+}
+
+async function loadDashboard() {
+  try {
+    const d = await GET('/seller/dashboard');
+    document.getElementById('s-total').textContent     = d.stats.total;
+    document.getElementById('s-delivered').textContent = d.stats.delivered;
+    document.getElementById('s-pending').textContent   = d.stats.pending;
+    document.getElementById('s-failed').textContent    = d.stats.failed;
+    document.getElementById('s-total-spent').textContent = fmtMoney(d.stats.total_spent);
+    document.getElementById('s-this-month').textContent  = fmtMoney(d.stats.this_month_spent);
+    document.getElementById('recent-tbody').innerHTML = d.recent_orders?.length
+      ? d.recent_orders.map(o => `<tr>
+          <td><code style="font-size:.78rem">${o.order_number}</code></td>
+          <td><div>${o.customer_name}</div><div style="font-size:.75rem;color:#64748b">${o.customer_phone}</div></td>
+          <td class="fw-600">${fmtMoney(o.product_price)}</td>
+          <td class="fw-600">${fmtMoney(o.delivery_fee)}</td>
+          <td style="font-size:.85rem">${o.driver_name||'<span class="text-muted">—</span>'}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td style="font-size:.78rem;color:#64748b">${timeAgo(o.created_at)}</td>
+          <td><button class="btn btn-sm btn-outline-secondary" onclick="viewOrder(${o.id})"><i class="bi bi-eye"></i></button></td>
+        </tr>`).join('')
+      : `<tr><td colspan="8" class="text-center py-4 text-muted">No orders yet. <a href="#" onclick="showPage('create',null,'New Order')">Create your first order!</a></td></tr>`;
+  } catch(e) {}
+}
+
+async function loadOrders(page = 1) {
+  const status = document.getElementById('status-filter').value;
+  const tbody  = document.getElementById('orders-tbody');
+  tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>`;
+  try {
+    const params = new URLSearchParams({ page, ...(status&&{status}) });
+    const d = await GET(`/seller/orders?${params}`);
+    tbody.innerHTML = d.data?.length ? d.data.map(o => `<tr>
+      <td><code style="font-size:.78rem">${o.order_number}</code></td>
+      <td><div>${o.customer_name}</div><div style="font-size:.75rem;color:#64748b">${o.customer_phone}</div></td>
+      <td style="font-size:.82rem;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.delivery_address}</td>
+      <td class="fw-600">${fmtMoney(o.product_price)}</td>
+      <td class="fw-600">${fmtMoney(o.delivery_fee)}</td>
+      <td style="font-size:.85rem">${o.driver_name||'<span class="text-muted">—</span>'}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td style="font-size:.78rem;color:#64748b">${fmtDate(o.created_at)}</td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm btn-outline-secondary" onclick="viewOrder(${o.id})"><i class="bi bi-eye"></i></button>
+          ${o.status === 'pending' ? `<button class="btn btn-sm btn-outline-primary" onclick="editOrder(${o.id})"><i class="bi bi-pencil"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="9" class="text-center py-4 text-muted">No orders found</td></tr>';
+
+    const pg = document.getElementById('orders-pagination');
+    pg.innerHTML = d.last_page > 1 ? Array.from({length:d.last_page},(_,i)=>
+      `<button class="btn btn-sm ${i+1===page?'btn-primary':'btn-outline-secondary'} me-1" onclick="loadOrders(${i+1})">${i+1}</button>`).join('') : '';
+  } catch(e) {}
+}
+
+function updateDeliveryFee() {
+  const zone = document.getElementById('c-delivery_zone').value;
+  const feeInput = document.getElementById('c-delivery_fee');
+  if (zone === 'Zone A - Inside Erbil') {
+    feeInput.value = 3000;
+  } else if (zone === 'Zone B - Outside Erbil') {
+    feeInput.value = 5000;
+  } else {
+    feeInput.value = '';
+  }
+}
+
+function updateDeliveryFeeEdit() {
+  const zone = document.getElementById('e-delivery_zone').value;
+  const feeInput = document.getElementById('e-delivery_fee');
+  if (zone === 'Zone A - Inside Erbil') {
+    feeInput.value = 3000;
+  } else if (zone === 'Zone B - Outside Erbil') {
+    feeInput.value = 5000;
+  }
+}
+
+async function submitOrder() {
+  const btn = document.getElementById('create-btn');
+  document.getElementById('create-alert').innerHTML = '';
+  
+  const phone = document.getElementById('c-customer_phone').value;
+  if (!validateIraqiPhone(phone)) {
+    document.getElementById('create-alert').innerHTML = '<div class="alert alert-danger py-2">Please enter a valid Iraqi phone number (e.g., 0750 111 2233)</div>';
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-1"></i>Submit Order';
+    return;
+  }
+  
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Submitting...';
+  try {
+    await POST('/seller/orders', {
+      customer_name:        document.getElementById('c-customer_name').value,
+      customer_phone:       phone,
+      delivery_address:     document.getElementById('c-delivery_address').value,
+      product_description:  document.getElementById('c-product_description').value,
+      product_price:        document.getElementById('c-product_price').value,
+      delivery_fee:         document.getElementById('c-delivery_fee').value,
+      delivery_zone:        document.getElementById('c-delivery_zone').value,
+      special_instructions: document.getElementById('c-special_instructions').value,
+    });
+    document.querySelectorAll('#page-create input,#page-create textarea,#page-create select').forEach(el => el.value='');
+    toast('Order created successfully!');
+    showPage('orders', null, 'My Orders');
+  } catch(e) {
+    const msg = e.errors ? Object.values(e.errors).flat().join(' ') : (e.message||'Failed');
+    document.getElementById('create-alert').innerHTML = `<div class="alert alert-danger py-2">${msg}</div>`;
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-1"></i>Submit Order';
+  }
+}
+
+async function editOrder(id) {
+  showPage('edit', null, 'Edit Order');
+  try {
+    const o = await GET(`/seller/orders/${id}`);
+    document.getElementById('edit-id').value               = o.id;
+    document.getElementById('e-customer_name').value       = o.customer_name;
+    document.getElementById('e-customer_phone').value      = o.customer_phone;
+    document.getElementById('e-delivery_address').value    = o.delivery_address;
+    document.getElementById('e-product_description').value = o.product_description;
+    document.getElementById('e-product_price').value      = o.product_price || '';
+    document.getElementById('e-delivery_fee').value        = o.delivery_fee;
+    document.getElementById('e-delivery_zone').value       = o.delivery_zone || '';
+    document.getElementById('e-special_instructions').value= o.special_instructions || '';
+  } catch(e) { toast('Failed to load order.','error'); showPage('orders',null,'My Orders'); }
+}
+
+async function updateOrder() {
+  const id = document.getElementById('edit-id').value;
+  const btn = document.getElementById('update-btn');
+  const phone = document.getElementById('e-customer_phone').value;
+  
+  if (!validateIraqiPhone(phone)) {
+    document.getElementById('edit-alert').innerHTML = '<div class="alert alert-danger py-2">Please enter a valid Iraqi phone number (e.g., 0750 111 2233)</div>';
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
+    return;
+  }
+  
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+  try {
+    await PUT(`/seller/orders/${id}`, {
+      customer_name:        document.getElementById('e-customer_name').value,
+      customer_phone:       phone,
+      delivery_address:     document.getElementById('e-delivery_address').value,
+      product_description:  document.getElementById('e-product_description').value,
+      product_price:        document.getElementById('e-product_price').value,
+      delivery_fee:         document.getElementById('e-delivery_fee').value,
+      delivery_zone:        document.getElementById('e-delivery_zone').value,
+      special_instructions: document.getElementById('e-special_instructions').value,
+    });
+    toast('Order updated!');
+    showPage('orders', null, 'My Orders');
+  } catch(e) {
+    const msg = e.errors ? Object.values(e.errors).flat().join(' ') : (e.message||'Failed');
+    document.getElementById('edit-alert').innerHTML = `<div class="alert alert-danger py-2">${msg}</div>`;
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Changes';
+  }
+}
+
+async function viewOrder(id) {
+  showPage('order-detail', null, 'Order Detail');
+  const el = document.getElementById('order-detail-content');
+  el.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border me-2"></div>Loading...</div>';
+  try {
+    const o = await GET(`/seller/orders/${id}`);
+    const steps = ['pending','assigned','picked_up','on_the_way','delivered'];
+    const curIdx = steps.indexOf(o.status);
+    el.innerHTML = `
+      <button class="btn btn-sm btn-outline-secondary" onclick="showPage('orders',null,'My Orders')" style="margin-top:-0.75rem;margin-bottom:0.5rem"><i class="bi bi-arrow-left me-1"></i>Back</button>
+      <div class="row g-3">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header-custom"><h5><i class="bi bi-box-seam me-2"></i>Order Details</h5>${statusBadge(o.status)}</div>
+            <div class="p-4">
+              <div class="row g-3">
+                <div class="col-md-6"><div class="text-muted small">Customer Name</div><div class="fw-600">${o.customer_name}</div></div>
+                <div class="col-md-6"><div class="text-muted small">Customer Phone</div><div class="fw-600">${o.customer_phone}</div></div>
+                <div class="col-12"><div class="text-muted small">Delivery Address</div><div>${o.delivery_address}</div></div>
+                <div class="col-12"><div class="text-muted small">Product</div><div>${o.product_description}</div></div>
+                <div class="col-md-4"><div class="text-muted small">Product Price</div><div class="fw-600">${fmtMoney(o.product_price)}</div></div>
+                <div class="col-md-4"><div class="text-muted small">Delivery Fee</div><div class="fw-700" style="font-size:1.1rem;color:#059669">${fmtMoney(o.delivery_fee)}</div></div>
+                <div class="col-md-4"><div class="text-muted small">Zone</div><div>${o.delivery_zone||'—'}</div></div>
+                ${o.special_instructions?`<div class="col-12"><div class="text-muted small">Special Instructions</div><div class="p-2 rounded" style="background:#fef9c3">${o.special_instructions}</div></div>`:''}
+                ${o.failure_reason?`<div class="col-12"><div class="text-muted small">Failure Reason</div><div class="p-2 rounded" style="background:#fee2e2">${o.failure_reason}</div></div>`:''}
+                ${o.driver_name?`<div class="col-md-6"><div class="text-muted small">Driver</div><div>${o.driver_name}</div></div>`:''}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header-custom"><h5><i class="bi bi-clock-history me-2"></i>Progress</h5></div>
+            <div class="p-3">
+              <div class="d-flex flex-wrap gap-2">
+                ${steps.map((s,i)=>{
+                  const done=i<=curIdx;
+                  const icons={pending:'clock',assigned:'person-check',picked_up:'bag-check',on_the_way:'truck',delivered:'check-circle'};
+                  const labels={pending:'Pending',assigned:'Assigned',picked_up:'Picked Up',on_the_way:'On The Way',delivered:'Delivered'};
+                  return `<div class="d-flex align-items-center gap-2 p-2 rounded" style="background:${done?'#f0f9ff':'#f8fafc'};border:1px solid ${done?'#bae6fd':'#e2e8f0'};width:100%">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${done?'#2563eb':'#e2e8f0'};display:flex;align-items:center;justify-content:center;color:${done?'#fff':'#94a3b8'};font-size:.75rem;flex-shrink:0"><i class="bi bi-${icons[s]}"></i></div>
+                    <div style="font-size:.8rem;font-weight:600;color:${done?'#1e293b':'#94a3b8'}">${labels[s]}</div>
+                  </div>`;
+                }).join('')}
+                ${o.status==='failed'?`<div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#fff1f2;border:1px solid #fca5a5;width:100%"><div style="width:28px;height:28px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;flex-shrink:0"><i class="bi bi-x-circle"></i></div><div style="font-size:.8rem;font-weight:600;color:#dc2626">Failed</div></div>`:''}
+              </div>
+            </div>
+          </div>
+          ${o.status==='pending'?`<div class="mt-3"><button class="btn btn-outline-primary w-100 btn-sm" onclick="editOrder(${o.id})"><i class="bi bi-pencil me-1"></i>Edit Order</button></div>`:''}
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML = '<p class="text-danger">Failed to load order.</p>'; }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

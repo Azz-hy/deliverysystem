@@ -145,3 +145,437 @@
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDMS — Driver Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root { --brand-primary:#2563eb; --sidebar-bg:#0f172a; --sidebar-hover:#1e293b; --sidebar-text:#94a3b8; --sidebar-active:#2563eb; --body-bg:#f1f5f9; --card-bg:#ffffff; --border:#e2e8f0; --text-main:#1e293b; --text-muted:#64748b; }
+    * { box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--body-bg); color:var(--text-main); min-height:100vh; }
+    .sidebar { width:260px; background:var(--sidebar-bg); min-height:100vh; position:fixed; top:0; left:0; z-index:1000; display:flex; flex-direction:column; transition:transform .3s; }
+    .sidebar-brand { padding:1.5rem 1.5rem 1rem; border-bottom:1px solid #1e293b; }
+    .sidebar-brand .logo-mark { width:38px; height:38px; background:var(--brand-primary); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fff; margin-bottom:.5rem; }
+    .sidebar-brand h1 { font-size:1.1rem; font-weight:800; color:#fff; margin:0; }
+    .sidebar-brand p { font-size:.7rem; color:var(--sidebar-text); margin:0; text-transform:uppercase; letter-spacing:1px; }
+    .sidebar-nav { flex:1; padding:1rem 0; }
+    .nav-section { padding:.25rem 1.25rem .5rem; font-size:.65rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1.5px; margin-top:.5rem; }
+    .sidebar-nav .nav-link { display:flex; align-items:center; gap:.75rem; padding:.65rem 1.5rem; color:var(--sidebar-text); font-size:.875rem; font-weight:500; transition:all .15s; cursor:pointer; }
+    .sidebar-nav .nav-link:hover { color:#e2e8f0; background:var(--sidebar-hover); }
+    .sidebar-nav .nav-link.active { color:#fff; background:var(--sidebar-active); }
+    .sidebar-nav .nav-link .bi { font-size:1.05rem; flex-shrink:0; }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid #1e293b; }
+    .user-card { display:flex; align-items:center; gap:.75rem; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:.875rem; flex-shrink:0; }
+    .user-card .user-name { font-size:.85rem; font-weight:600; color:#e2e8f0; }
+    .user-card .user-role { font-size:.72rem; color:var(--sidebar-text); }
+    .main-wrapper { margin-left:260px; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar { background:var(--card-bg); border-bottom:1px solid var(--border); padding:.875rem 1.75rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:900; }
+    .topbar-title { font-size:1.15rem; font-weight:700; }
+    .topbar-sub { font-size:.8rem; color:var(--text-muted); }
+    .main-content { padding:1.75rem; flex:1; }
+    .card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    .card-header-custom { padding:1.25rem 1.5rem .75rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-header-custom h5 { font-size:.95rem; font-weight:700; margin:0; }
+    .stat-card { border-radius:14px; padding:1.35rem 1.5rem; }
+    .stat-card .stat-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:.75rem; background:rgba(255,255,255,.2); }
+    .stat-card .stat-value { font-size:1.75rem; font-weight:800; line-height:1; }
+    .stat-card .stat-label { font-size:.78rem; margin-top:.3rem; opacity:.75; font-weight:500; }
+    .stat-blue   { background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; }
+    .stat-green  { background:linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .stat-amber  { background:linear-gradient(135deg,#d97706,#f59e0b); color:#fff; }
+    .stat-teal   { background:linear-gradient(135deg,#0d9488,#2dd4bf); color:#fff; }
+    .badge-status { font-size:.72rem; font-weight:600; padding:.3rem .7rem; border-radius:20px; }
+    .badge-pending    { background:#fef3c7; color:#92400e; }
+    .badge-assigned   { background:#dbeafe; color:#1e40af; }
+    .badge-picked_up  { background:#ede9fe; color:#5b21b6; }
+    .badge-on_the_way { background:#e0f2fe; color:#075985; }
+    .badge-delivered  { background:#dcfce7; color:#166534; }
+    .badge-failed     { background:#fee2e2; color:#991b1b; }
+    .table-custom { font-size:.875rem; }
+    .table-custom thead th { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-muted); background:#f8fafc; border-bottom:2px solid var(--border); padding:.875rem 1rem; }
+    .table-custom tbody td { padding:.875rem 1rem; vertical-align:middle; }
+    .table-custom tbody tr:hover { background:#f8fafc; }
+    .form-label { font-size:.85rem; font-weight:600; margin-bottom:.35rem; }
+    .form-control, .form-select { border:1.5px solid var(--border); border-radius:8px; font-size:.875rem; padding:.55rem .875rem; transition:border-color .15s; font-family:inherit; }
+    .form-control:focus, .form-select:focus { border-color:var(--brand-primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+    .fw-600 { font-weight:600; } .fw-700 { font-weight:700; }
+    .page { display:none; } .page.active { display:block; }
+    .btn-hamburger { display:none; background:none; border:none; font-size:1.3rem; color:var(--text-main); cursor:pointer; padding:0; }
+    @media (max-width:768px) { .btn-hamburger { display:block; } .sidebar { transform:translateX(-260px); } .sidebar.open { transform:translateX(0); } .main-wrapper { margin-left:0; } }
+  </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo-mark"><i class="bi bi-truck"></i></div>
+    <h1>LDMS</h1>
+    <p>Driver Portal</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a class="nav-link active" onclick="showPage('dashboard',this,'Driver Dashboard','Your delivery overview')"><i class="bi bi-grid"></i> Dashboard</a>
+    <div class="nav-section">Deliveries</div>
+    <a class="nav-link" onclick="showPage('deliveries',this,'My Deliveries','Active deliveries')"><i class="bi bi-truck"></i> My Deliveries</a>
+    <a class="nav-link" onclick="showPage('available',this,'Marketplace','Available requests')"><i class="bi bi-shop"></i> Available Orders</a>
+    <a class="nav-link" onclick="showPage('history',this,'Delivery History','Completed deliveries')"><i class="bi bi-clock-history"></i> History</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="user-initial">D</div>
+      <div><div class="user-name" id="user-name">Driver</div><div class="user-role" id="user-vehicle">Driver</div></div>
+      <button class="btn btn-sm btn-link text-secondary p-0 ms-auto" onclick="logout()"><i class="bi bi-box-arrow-right" style="font-size:1.1rem"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="main-wrapper">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn-hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list"></i></button>
+      <div>
+        <div class="topbar-title" id="page-title">Driver Dashboard</div>
+        <div class="topbar-sub">Your delivery overview</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="stat-card stat-blue"><div class="stat-icon"><i class="bi bi-truck"></i></div><div class="stat-value" id="s-active">—</div><div class="stat-label">Active Deliveries</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-green"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" id="s-today">—</div><div class="stat-label">Delivered Today</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-amber"><div class="stat-icon"><i class="bi bi-calendar-week"></i></div><div class="stat-value" id="s-week">—</div><div class="stat-label">This Week</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card stat-teal"><div class="stat-icon"><i class="bi bi-graph-up"></i></div><div class="stat-value" id="s-rate">—%</div><div class="stat-label">Success Rate</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header-custom">
+          <h5><i class="bi bi-truck me-2 text-primary"></i>Active Deliveries</h5>
+          <button class="btn btn-sm btn-outline-primary" onclick="showPage('deliveries',null,'My Deliveries','')">All Deliveries</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Address</th><th>Seller</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="active-tbody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELIVERIES -->
+    <div class="page" id="page-deliveries">
+      <div class="card">
+        <div class="card-header-custom"><h5><i class="bi bi-truck me-2 text-primary"></i>Active Deliveries</h5></div>
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Address</th><th>Seller</th><th>Product Price</th><th>Fee</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="deliveries-tbody"><tr><td colspan="8" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="page-history">
+      <div class="d-flex gap-2 mb-3">
+        <select id="hist-filter" class="form-select" style="max-width:180px" onchange="loadHistory()">
+          <option value="">All Completed</option>
+          <option value="delivered">Delivered</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Product Price</th><th>Fee</th><th>Status</th><th>Completed</th></tr></thead>
+            <tbody id="history-tbody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-end p-3" id="hist-pagination"></div>
+      </div>
+    </div>
+
+    <!-- AVAILABLE ORDERS -->
+    <div class="page" id="page-available">
+      <div class="card">
+        <div class="card-header-custom"><h5><i class="bi bi-shop me-2 text-primary"></i>Available Marketplace</h5></div>
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead><tr><th>Order #</th><th>Customer</th><th>Address</th><th>Seller</th><th>Product Price</th><th>Fee</th><th>Action</th></tr></thead>
+            <tbody id="available-tbody"><tr><td colspan="7" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELIVERY DETAIL -->
+    <div class="page" id="page-delivery-detail">
+      <div class="mb-3">
+        <button class="btn btn-sm btn-outline-secondary" id="detail-back-btn"><i class="bi bi-arrow-left me-1"></i>Back</button>
+      </div>
+      <div id="delivery-detail-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script>
+const currentUser = requireAuth('driver');
+if (currentUser) {
+  document.getElementById('user-name').textContent = currentUser.name;
+  document.getElementById('user-initial').textContent = currentUser.name[0].toUpperCase();
+  document.getElementById('user-vehicle').textContent = currentUser.vehicle_type || 'Driver';
+}
+
+function logout() { Auth.clear(); window.location.href = '../index.html'; }
+
+function showPage(name, linkEl, title, sub) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (linkEl) linkEl.classList.add('active');
+  if (title) document.getElementById('page-title').textContent = title;
+  document.getElementById('sidebar').classList.remove('open');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'deliveries') loadDeliveries();
+  if (name === 'available') loadAvailable();
+  if (name === 'history') loadHistory();
+}
+
+async function loadAvailable() {
+  const tbody = document.getElementById('available-tbody');
+  tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>`;
+  try {
+    const d = await GET('/driver/available');
+    tbody.innerHTML = d?.length
+      ? d.map(o => `<tr>
+          <td><code style="font-size:.78rem">${o.order_number}</code></td>
+          <td>${o.customer_name}</td>
+          <td style="font-size:.82rem">${o.delivery_address}</td>
+          <td>${o.seller_name||'—'}</td>
+          <td class="fw-600">${fmtMoney(o.product_price)}</td>
+          <td class="fw-600">${fmtMoney(o.delivery_fee)}</td>
+          <td><button class="btn btn-sm btn-success" onclick="takeOrder(${o.id})"><i class="bi bi-plus-lg me-1"></i>Take Order</button></td>
+        </tr>`).join('')
+      : `<tr><td colspan="7" class="text-center py-4 text-muted">No available orders at the moment</td></tr>`;
+  } catch(e) { }
+}
+
+async function takeOrder(id) {
+  if (!confirm('Take this order for delivery?')) return;
+  try {
+    await POST(`/driver/deliveries/${id}/take`);
+    toast('✅ Order taken successfully!');
+    showPage('deliveries', document.querySelector('[onclick*="deliveries"]'), 'My Deliveries', '');
+  } catch(e) { toast(e.message || 'Failed to take order.', 'error'); }
+}
+
+async function loadDashboard() {
+  try {
+    const d = await GET('/driver/dashboard');
+    console.log('Driver Dashboard Data:', d);
+    document.getElementById('s-active').textContent = d.stats.assigned;
+    document.getElementById('s-today').textContent  = d.stats.today;
+    document.getElementById('s-week').textContent   = d.stats.this_week;
+    document.getElementById('s-rate').textContent   = d.stats.success_rate + '%';
+
+    document.getElementById('active-tbody').innerHTML = d.active_orders?.length
+      ? d.active_orders.map(o => `<tr>
+          <td><code style="font-size:.78rem">${o.order_number}</code></td>
+          <td><div>${o.customer_name}</div><div style="font-size:.75rem;color:#64748b">${o.customer_phone}</div></td>
+          <td style="font-size:.82rem;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.delivery_address}</td>
+          <td style="font-size:.85rem">${o.seller_name||'—'}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td><button class="btn btn-sm btn-primary" onclick="viewDelivery(${o.id},'dashboard')"><i class="bi bi-arrow-right me-1"></i>Manage</button></td>
+        </tr>`).join('')
+      : `<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-check2-all" style="font-size:2rem;display:block;margin-bottom:.5rem;color:#059669"></i>No active deliveries right now</td></tr>`;
+  } catch(e) {}
+}
+
+async function loadDeliveries() {
+  const tbody = document.getElementById('deliveries-tbody');
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>`;
+  try {
+    const d = await GET('/driver/deliveries?status=active');
+    tbody.innerHTML = (Array.isArray(d) ? d : []).length
+      ? d.map(o => `<tr>
+          <td><code style="font-size:.78rem">${o.order_number}</code></td>
+          <td><div>${o.customer_name}</div><div style="font-size:.75rem;color:#64748b">${o.customer_phone}</div></td>
+          <td style="font-size:.82rem;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.delivery_address}</td>
+          <td>${o.seller_name||'—'}</td>
+          <td class="fw-600">${fmtMoney(o.product_price)}</td>
+          <td class="fw-600">${fmtMoney(o.delivery_fee)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td><button class="btn btn-sm btn-primary" onclick="viewDelivery(${o.id},'deliveries')"><i class="bi bi-arrow-right me-1"></i>Manage</button></td>
+        </tr>`).join('')
+      : `<tr><td colspan="8" class="text-center py-4 text-muted"><i class="bi bi-check2-all" style="font-size:2rem;display:block;margin-bottom:.5rem;color:#059669"></i>No active deliveries</td></tr>`;
+  } catch(e) {}
+}
+
+async function loadHistory(page = 1) {
+  const filter = document.getElementById('hist-filter').value;
+  const tbody  = document.getElementById('history-tbody');
+  tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>`;
+  try {
+    const params = new URLSearchParams({ page, ...(filter&&{status:filter}) });
+    const d = await GET(`/driver/deliveries/history?${params}`);
+    tbody.innerHTML = d.data?.length
+      ? d.data.map(o => `<tr>
+          <td><code style="font-size:.78rem">${o.order_number}</code></td>
+          <td>${o.customer_name}</td>
+          <td class="fw-600">${fmtMoney(o.product_price)}</td>
+          <td class="fw-600">${fmtMoney(o.delivery_fee)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td style="font-size:.8rem;color:#64748b">${fmtDate(o.delivered_at||o.updated_at)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" class="text-center py-4 text-muted">No history</td></tr>';
+
+    const pg = document.getElementById('hist-pagination');
+    pg.innerHTML = d.last_page > 1 ? Array.from({length:d.last_page},(_,i)=>
+      `<button class="btn btn-sm ${i+1===page?'btn-primary':'btn-outline-secondary'} me-1" onclick="loadHistory(${i+1})">${i+1}</button>`).join('') : '';
+  } catch(e) {}
+}
+
+let detailFromPage = 'dashboard';
+async function viewDelivery(id, fromPage) {
+  detailFromPage = fromPage;
+  showPage('delivery-detail', null, 'Delivery Detail', '');
+  document.getElementById('detail-back-btn').onclick = () => showPage(fromPage, null, fromPage === 'dashboard' ? 'Driver Dashboard' : 'My Deliveries', '');
+  const el = document.getElementById('delivery-detail-content');
+  el.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border me-2"></div>Loading...</div>';
+  try {
+    const o = await GET(`/driver/deliveries/${id}`);
+    const validNext = { assigned:['picked_up','failed'], picked_up:['on_the_way','failed'], on_the_way:['delivered','failed'] };
+    const transitions = validNext[o.status] || [];
+    const isFinal = ['delivered','failed'].includes(o.status);
+
+    const btnConfig = {
+      picked_up:  { cls:'btn-primary',  icon:'bag-check',    label:'Mark as Picked Up' },
+      on_the_way: { cls:'btn-secondary', icon:'truck',       label:'Start Delivery' },
+      delivered:  { cls:'btn-success',  icon:'check-circle', label:'Mark as Delivered' },
+    };
+
+    const steps = ['assigned','picked_up','on_the_way','delivered'];
+    const curIdx = steps.indexOf(o.status);
+
+    el.innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-7">
+          <div class="card">
+            <div class="card-header-custom"><h5><i class="bi bi-box-seam me-2"></i>Delivery Info</h5>${statusBadge(o.status)}</div>
+            <div class="p-4">
+              <div class="row g-3">
+                <div class="col-md-6"><div class="text-muted small">Customer Name</div><div class="fw-600">${o.customer_name}</div></div>
+                <div class="col-md-6"><div class="text-muted small">Customer Phone</div><div class="fw-600"><a href="tel:${o.customer_phone}">${o.customer_phone}</a></div></div>
+                <div class="col-12"><div class="text-muted small">Delivery Address</div><div class="fw-500">${o.delivery_address}</div></div>
+                <div class="col-12"><div class="text-muted small">Package</div><div>${o.product_description}</div></div>
+                ${o.special_instructions ? `<div class="col-12"><div class="text-muted small">Special Instructions</div><div class="p-2 rounded" style="background:#fef9c3">${o.special_instructions}</div></div>` : ''}
+                <div class="col-md-4"><div class="text-muted small">Seller</div><div>${o.seller_name||'—'}</div></div>
+                <div class="col-md-4"><div class="text-muted small">Product Price</div><div class="fw-600">${fmtMoney(o.product_price)}</div></div>
+                <div class="col-md-4"><div class="text-muted small">Delivery Fee</div><div class="fw-600">${fmtMoney(o.delivery_fee)}</div></div>
+              </div>
+              <hr style="margin:1rem 0">
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="p-3 rounded" style="background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;text-align:center">
+                    <div style="font-size:.75rem;opacity:.9;text-transform:uppercase;letter-spacing:1px">Total Fee</div>
+                    <div style="font-size:1.75rem;font-weight:800">${fmtMoney((parseFloat(o.product_price) || 0) + (parseFloat(o.delivery_fee) || 0))}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-5">
+          ${!isFinal ? `
+          <div class="card mb-3">
+            <div class="card-header-custom"><h5><i class="bi bi-arrow-repeat me-2"></i>Update Status</h5></div>
+            <div class="p-4">
+              <div id="status-alert"></div>
+              ${transitions.filter(t => t !== 'failed').map(t => {
+                const cfg = btnConfig[t] || { cls:'btn-warning', icon:'arrow-repeat', label: t };
+                return `<form class="mb-2" onsubmit="updateStatus(event,${o.id},'${t}')">
+                  <button type="submit" class="btn ${cfg.cls} w-100">
+                    <i class="bi bi-${cfg.icon} me-2"></i>${cfg.label}
+                  </button>
+                </form>`;
+              }).join('')}
+              <hr>
+              <p class="text-muted small fw-600 mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#fail-collapse">
+                <i class="bi bi-exclamation-triangle me-1 text-danger"></i>Report Failed Delivery
+              </p>
+              <div class="collapse" id="fail-collapse">
+                <div class="mb-3"><label class="form-label">Reason *</label><textarea id="fail-reason" class="form-control" rows="2" placeholder="Customer not available, wrong address..."></textarea></div>
+                <div class="mb-3"><label class="form-label">Driver Notes</label><input id="driver-notes" class="form-control" placeholder="Additional notes..."></div>
+                <button class="btn btn-danger w-100 btn-sm" onclick="updateStatus(null,${o.id},'failed')">
+                  <i class="bi bi-x-circle me-1"></i>Confirm Failed
+                </button>
+              </div>
+            </div>
+          </div>
+          ` : `
+          <div class="card mb-3">
+            <div class="p-4 text-center">
+              ${o.status === 'delivered'
+                ? `<i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem"></i><p class="fw-700 mt-2 mb-0">Delivered Successfully</p><p class="text-muted small">${fmtDate(o.delivered_at)}</p>`
+                : `<i class="bi bi-x-circle-fill text-danger" style="font-size:2.5rem"></i><p class="fw-700 mt-2 mb-0 text-danger">Delivery Failed</p>${o.failure_reason?`<p class="text-muted small">${o.failure_reason}</p>`:''}`
+              }
+            </div>
+          </div>
+          `}
+
+          <div class="card">
+            <div class="card-header-custom"><h5><i class="bi bi-clock-history me-2"></i>Progress</h5></div>
+            <div class="p-3">
+              <div class="d-flex flex-wrap gap-2">
+                ${steps.map((s,i) => {
+                  const done = i <= curIdx;
+                  const icons = {assigned:'person-check',picked_up:'bag-check',on_the_way:'truck',delivered:'check-circle'};
+                  const labels = {assigned:'Assigned',picked_up:'Picked Up',on_the_way:'On The Way',delivered:'Delivered'};
+                  return `<div class="d-flex align-items-center gap-2 p-2 rounded" style="background:${done?'#f0f9ff':'#f8fafc'};border:1px solid ${done?'#bae6fd':'#e2e8f0'};width:100%">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${done?'#2563eb':'#e2e8f0'};display:flex;align-items:center;justify-content:center;color:${done?'#fff':'#94a3b8'};font-size:.75rem;flex-shrink:0"><i class="bi bi-${icons[s]}"></i></div>
+                    <div style="font-size:.8rem;font-weight:600;color:${done?'#1e293b':'#94a3b8'}">${labels[s]}</div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML = '<p class="text-danger">Failed to load delivery.</p>'; }
+}
+
+async function updateStatus(e, orderId, status) {
+  if (e) e.preventDefault();
+  const failReason = document.getElementById('fail-reason')?.value;
+  const driverNotes = document.getElementById('driver-notes')?.value;
+  if (status === 'failed' && !failReason) {
+    const alertEl = document.getElementById('status-alert');
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-danger py-2 mb-3">Please enter a failure reason.</div>';
+    return;
+  }
+  try {
+    await POST(`/driver/deliveries/${orderId}/status`, { status, failure_reason: failReason, driver_notes: driverNotes });
+    toast(status === 'delivered' ? '✅ Order marked as delivered!' : 'Status updated!');
+    viewDelivery(orderId, detailFromPage);
+  } catch(err) {
+    toast(err.message || 'Failed to update status.', 'error');
+  }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
