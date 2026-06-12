@@ -127,3 +127,8 @@ step is required to run the application.
 
 The system was built collaboratively using **Git and GitHub** with a **feature-branch workflow** — each member developed their component on a separate branch and integrated it through reviewed pull requests. Development progressed in logical layers: the database schema and models first, then authentication and role middleware, then the role-specific controllers, and finally frontend integration.
 
+## warning 
+
+we use claude and other ai for ui ux design
+and make our development pocess faster
+at the end using claude to connect each part together and polish the code
