@@ -1,58 +1,95 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+LDMS — Local Delivery Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A role-based delivery management backend built with Laravel 12, exposing a RESTful API secured by token authentication. LDMS coordinates a local delivery operation between three types of users — sellers, who create delivery orders; drivers, who fulfill them; and an administrator, who oversees the entire workflow.
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+LDMS digitizes and centralizes the delivery process, ensuring every order is tracked accurately from creation to completion. The backend serves structured JSON over a REST API, while a separate HTML/CSS/JavaScript frontend consumes those endpoints — keeping the presentation layer cleanly decoupled from the application logic.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Tech Stack
 
-## Learning Laravel
+LayerTechnologyFrameworkLaravel 12LanguagePHP 8.2+DatabaseMySQLAuthenticationLaravel Sanctum (token-based)FrontendHTML, CSS, JavaScriptArchitectureRESTful API (JSON)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Architecture
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+The system follows the Model–View–Controller (MVC) pattern. Each request flows through a route, is delegated to the appropriate controller, which interacts with a model to perform database operations before returning a JSON response.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+The data layer comprises four principal entities:
 
-## Agentic Development
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+User — the base account holding credentials and role.
+Seller — linked one-to-one with a user; owns orders.
+Driver — linked one-to-one with a user; fulfills orders.
+Order — belongs to one seller and may be assigned to one driver.
 
-```bash
-composer require laravel/boost --dev
 
-php artisan boost:install
-```
+Authentication & Roles
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+A unified authentication system assigns every user one of three roles: admin, seller, or driver. A custom RoleMiddleware validates the user's role on every protected request and verifies the account is active, preventing deactivated or unauthorized users from accessing restricted functionality.
 
-## Contributing
+RoleCapabilitiesSellerCreate, view, and modify their own ordersDriverView available deliveries, accept assignments, update delivery statusAdminManage users, assign drivers, monitor all orders, generate reports
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Order Lifecycle
 
-## Code of Conduct
+The core of the system is a validated finite state machine governing how an order moves through its stages:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+pending → assigned → picked_up → on_the_way → delivered
+            ↓           ↓            ↓
+          failed      failed       failed
 
-## Security Vulnerabilities
+Permissible transitions are explicitly defined in the Order model. An order may only advance through valid transitions — for example, it cannot jump directly from assigned to delivered. This protects the data from entering inconsistent states and mirrors the real-world delivery process.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Additional Design Considerations
 
-## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Auto-generated order numbers — each order receives a unique identifier on creation (e.g. ORD-A1B2C3-20260612).
+Soft deletes — deleted orders are hidden from active queries but retained for history and auditing.
+Lifecycle timestamps — assigned_at, picked_up_at, and delivered_at are recorded to support reporting and analysis.
+
+
+API Endpoints
+
+Public
+
+MethodEndpointDescriptionPOST/api/loginAuthenticate and receive a tokenPOST/api/registerRegister a new account
+
+Authenticated (auth:sanctum)
+
+MethodEndpointDescriptionPOST/api/logoutRevoke the current token
+
+Admin (role:admin)
+
+MethodEndpointDescriptionGET/api/admin/dashboardDashboard summaryGET/api/admin/usersList usersPOST/api/admin/usersCreate a userPOST/api/admin/users/{user}/toggleActivate / deactivate a userDELETE/api/admin/users/{user}Delete a userGET/api/admin/ordersList all ordersPOST/api/admin/orders/{order}/assignAssign a driverPOST/api/admin/orders/{order}/statusUpdate order statusGET/api/admin/reportsGenerate reports
+
+Seller (role:seller)
+
+MethodEndpointDescriptionGET/api/seller/dashboardSeller dashboardGET/api/seller/ordersList own ordersPOST/api/seller/ordersCreate an orderPUT/api/seller/orders/{order}Update an order
+
+Driver (role:driver)
+
+MethodEndpointDescriptionGET/api/driver/dashboardDriver dashboardGET/api/driver/availableList available deliveriesPOST/api/driver/deliveries/{order}/takeAccept a deliveryGET/api/driver/deliveriesActive deliveriesGET/api/driver/deliveries/historyDelivery historyPOST/api/driver/deliveries/{order}/statusUpdate delivery status
+
+Getting Started
+
+bash# Install dependencies
+composer install
+npm install
+
+# Environment setup
+cp .env.example .env
+php artisan key:generate
+
+# Configure your database in .env, then migrate
+php artisan migrate
+
+# Build frontend assets
+npm run build
+
+# Run the development server
+php artisan serve
+
+Development Process
+
+The system was built collaboratively using Git and GitHub with a feature-branch workflow — each member developed their component on a separate branch and integrated it through reviewed pull requests. Development progressed in logical layers: the database schema and models first, then authentication and role middleware, then the role-specific controllers, and finally frontend integration.
+
