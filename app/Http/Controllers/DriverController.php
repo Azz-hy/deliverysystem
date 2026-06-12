@@ -17,6 +17,7 @@ class DriverController extends Controller
         $d = $this->driver();
 
         return response()->json([
+            'vehicle_type' => $d->vehicle_type,
             'stats' => [
                 'assigned' => $d->activeOrdersCount(),
                 'today' => $d->completedToday(),
