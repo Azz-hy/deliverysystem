@@ -198,6 +198,9 @@ class AdminController extends Controller
             'status' => $order->status,
             'failure_reason' => $order->failure_reason,
             'driver_notes' => $order->driver_notes,
+            'assigned_at' => $order->assigned_at,
+            'picked_up_at' => $order->picked_up_at,
+            'delivered_at' => $order->delivered_at,
             'created_at' => $order->created_at,
         ]);
     }

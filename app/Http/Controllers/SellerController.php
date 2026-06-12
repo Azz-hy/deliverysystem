@@ -17,6 +17,7 @@ class SellerController extends Controller
         $s = $this->seller();
 
         return response()->json([
+            'business_name' => $s->business_name,
             'stats' => [
                 'total' => $s->totalOrders(),
                 'delivered' => $s->deliveredOrders(),
